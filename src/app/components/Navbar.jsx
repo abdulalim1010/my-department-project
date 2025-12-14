@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import logoimage from "../../../src/assets/logoo.png";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
@@ -14,200 +14,227 @@ import {
   FlaskConical,
   Phone,
   Library,
+  GraduationCap,
 } from "lucide-react";
 
+import logoimage from "../../../src/assets/logoo.png";
+
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [hoverMenu, setHoverMenu] = useState(null);
-  const [expandedMenu, setExpandedMenu] = useState(null); // for mobile submenu toggle
+  const [expandedMenu, setExpandedMenu] = useState(null);
+  const [scrolled, setScrolled] = useState(false);
+
+  /* ===== Sticky scroll effect ===== */
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 40);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const navLinks = [
-    { name: "Home", icon: <Home size={18} />, href: "/" },
+    { name: "Home", icon: Home, href: "/" },
+
     {
       name: "Academic",
-      icon: <Library size={18} />,
+      icon: Library,
       submenu: [
-        { label: "Programs", href: "/academic/programs" },
-        { label: "Syllabus", href: "/academic/syllabus" },
-        { label: "Class Routine", href: "/academic/routine" },
+        { label: "Class Notes", href: "/academic/class-notes" },
+        { label: "Books", href: "/academic/books" },
+        { label: "Exam Routine", href: "/academic/exam-routine" },
       ],
     },
+
     {
       name: "Research",
-      icon: <FlaskConical size={18} />,
+      icon: FlaskConical,
       submenu: [
         { label: "Research Areas", href: "/research/areas" },
         { label: "Publications", href: "/research/publications" },
         { label: "Projects", href: "/research/projects" },
       ],
     },
+
     {
       name: "Students",
-      icon: <Users size={18} />,
+      icon: Users,
       submenu: [
         { label: "Student List", href: "/students" },
-        { label: "Clubs", href: "/students/clubs" },
-        { label: "Achievements", href: "/students/achievements" },
+        { label: "Results", href: "/students/results" },
       ],
     },
+
     {
       name: "Teachers",
-      icon: <Users size={18} />,
+      icon: GraduationCap,
       submenu: [
-        { label: "Faculty List", href: "/teachers/list" },
-        { label: "Departments", href: "/teachers" },
+        { label: "Faculty Members", href: "/teachers" },
       ],
     },
+
     {
       name: "Notice",
-      icon: <BookOpen size={18} />,
+      icon: BookOpen,
       submenu: [
-        { label: "Latest Notices", href: "/notice/latest" },
-        { label: "Archive", href: "/notice/archive" },
+        { label: "General Notices", href: "/notice" },
+        { label: "Exam Notices", href: "/notice/exam" },
       ],
     },
-    {
-      name: "Contact",
-      icon: <Phone size={18} />,
-      submenu: [
-        { label: "Department Office", href: "/contact/office" },
-        { label: "Location", href: "/contact/location" },
-        { label: "Support", href: "/contact/support" },
-      ],
-    },
+
+    { name: "Contact", icon: Phone, href: "/contact" },
   ];
 
   return (
     <motion.header
-      initial={{ y: -80, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className="fixed top-0 left-0 w-full bg-blue-700 shadow-xl z-50"
+      initial={{ y: -80 }}
+      animate={{ y: 0 }}
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300
+        ${scrolled ? "bg-blue-800 shadow-2xl py-2" : "bg-blue-700 py-4"}`}
     >
-      <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <nav className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+        
         {/* LOGO */}
-        <Link href="/" className="flex items-center gap-3 cursor-pointer select-none">
-          <Image
-            src={logoimage}
-            alt="Department Logo"
-            width={40}
-            height={40}
-            className="rounded-md"
-            priority
-          />
-          <h1 className="text-xl font-bold text-white">My Department</h1>
+        <Link href="/" className="flex items-center gap-3">
+          <Image src={logoimage} alt="Logo" width={40} height={40} />
+          <span className="text-xl font-bold text-white">My Department</span>
         </Link>
 
-        {/* DESKTOP MENU */}
-        <ul className="hidden md:flex items-center gap-8 font-medium text-white">
-          {navLinks.map((link) => (
-            <li
-              key={link.name}
-              className="relative"
-              onMouseEnter={() => setHoverMenu(link.name)}
-              onMouseLeave={() => setHoverMenu(null)}
-            >
-              {!link.submenu ? (
-                <Link href={link.href} className="flex items-center gap-1 hover:text-blue-300 transition">
-                  {link.icon} {link.name}
-                </Link>
-              ) : (
-                <a className="flex items-center gap-1 hover:text-blue-300 transition cursor-pointer">
-                  {link.icon} {link.name}
-                </a>
-              )}
+        {/* ===== DESKTOP MENU ===== */}
+        <ul className="hidden md:flex items-center gap-8 text-white font-medium">
+          {navLinks.map((link) => {
+            const Icon = link.icon;
+            const isActive =
+              link.href && pathname === link.href;
 
-              {/* Desktop submenu */}
-              {link.submenu && hoverMenu === link.name && (
-                <AnimatePresence>
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute bg-white text-gray-700 shadow-lg rounded-lg mt-2 w-48 p-2"
-                  >
-                    {link.submenu.map((sub, i) => (
-                      <Link
-                        key={i}
-                        href={sub.href}
-                        className="block px-4 py-2 hover:bg-blue-100 rounded-md transition"
-                      >
-                        {sub.label}
-                      </Link>
-                    ))}
-                  </motion.div>
-                </AnimatePresence>
-              )}
-            </li>
-          ))}
-        </ul>
-
-        {/* MOBILE MENU BUTTON */}
-        <button
-          className="md:hidden text-white"
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <X size={28} /> : <Menu size={28} />}
-        </button>
-      </nav>
-
-      {/* MOBILE MENU */}
-      <AnimatePresence>
-        {open && (
-          <motion.ul
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="md:hidden bg-white shadow-lg px-6 py-4 text-gray-800 space-y-4"
-          >
-            {navLinks.map((link) => (
-              <li key={link.name}>
+            return (
+              <li
+                key={link.name}
+                className="relative"
+                onMouseEnter={() => setHoverMenu(link.name)}
+                onMouseLeave={() => setHoverMenu(null)}
+              >
+                {/* Main link */}
                 {!link.submenu ? (
                   <Link
                     href={link.href}
-                    className="flex items-center gap-2 text-lg py-2"
-                    onClick={() => setOpen(false)}
+                    className={`flex items-center gap-2 transition
+                      ${isActive ? "text-yellow-300" : "hover:text-blue-300"}`}
                   >
-                    {link.icon} {link.name}
+                    <Icon size={18} />
+                    {link.name}
                   </Link>
                 ) : (
-                  <div>
-                    <p
-                      className="font-semibold text-lg flex items-center justify-between gap-2 cursor-pointer"
-                      onClick={() =>
-                        setExpandedMenu(expandedMenu === link.name ? null : link.name)
-                      }
-                    >
-                      <span className="flex items-center gap-2">{link.icon} {link.name}</span>
-                      <span className="text-xl">{expandedMenu === link.name ? "−" : "+"}</span>
-                    </p>
-                    <AnimatePresence>
-                      {expandedMenu === link.name && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="pl-6 overflow-hidden space-y-1"
-                        >
-                          {link.submenu.map((sub, i) => (
-                            <Link
-                              key={i}
-                              href={sub.href}
-                              className="block py-1 text-gray-700 hover:text-blue-600 transition"
-                              onClick={() => setOpen(false)}
-                            >
-                              • {sub.label}
-                            </Link>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                  <button
+                    className="flex items-center gap-2 hover:text-blue-300 focus:outline-none"
+                    aria-haspopup="true"
+                  >
+                    <Icon size={18} />
+                    {link.name}
+                  </button>
                 )}
+
+                {/* ===== MEGA MENU ===== */}
+                <AnimatePresence>
+                  {link.submenu && hoverMenu === link.name && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.25 }}
+                      className="absolute left-0 mt-4 w-64 bg-white rounded-xl shadow-xl p-4 grid gap-2"
+                    >
+                      {link.submenu.map((sub) => (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className="px-4 py-2 rounded-lg hover:bg-blue-100 text-gray-700 transition"
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </li>
-            ))}
-          </motion.ul>
+            );
+          })}
+        </ul>
+
+        {/* ===== MOBILE BUTTON ===== */}
+        <button
+          className="md:hidden text-white"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle Menu"
+        >
+          {mobileOpen ? <X size={28} /> : <Menu size={28} />}
+        </button>
+      </nav>
+
+      {/* ===== MOBILE MENU ===== */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{ height: "auto" }}
+            exit={{ height: 0 }}
+            className="md:hidden bg-white overflow-hidden"
+          >
+            <ul className="px-6 py-4 space-y-4">
+              {navLinks.map((link) => (
+                <li key={link.name}>
+                  {!link.submenu ? (
+                    <Link
+                      href={link.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="block font-medium"
+                    >
+                      {link.name}
+                    </Link>
+                  ) : (
+                    <>
+                      <div
+                        className="flex justify-between items-center cursor-pointer font-medium"
+                        onClick={() =>
+                          setExpandedMenu(
+                            expandedMenu === link.name ? null : link.name
+                          )
+                        }
+                      >
+                        {link.name}
+                        <span>{expandedMenu === link.name ? "−" : "+"}</span>
+                      </div>
+
+                      <AnimatePresence>
+                        {expandedMenu === link.name && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="pl-4 mt-2 space-y-2"
+                          >
+                            {link.submenu.map((sub) => (
+                              <Link
+                                key={sub.href}
+                                href={sub.href}
+                                onClick={() => setMobileOpen(false)}
+                                className="block text-gray-600"
+                              >
+                                • {sub.label}
+                              </Link>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
         )}
       </AnimatePresence>
     </motion.header>
