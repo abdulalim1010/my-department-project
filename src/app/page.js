@@ -1,12 +1,12 @@
-import Image from "next/image";
 import Banner from "./components/Banner";
-import StudentsPage from "./students/page";
+import StudentCarousel from "./components/StudentCarousel";
+
 
 export default function Home() {
   return (
     <div>
-<Banner/>
-
+      <Banner />
+      <StudentCarousel />
     </div>
   );
 }

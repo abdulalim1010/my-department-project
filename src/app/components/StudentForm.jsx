@@ -7,38 +7,50 @@ export default function StudentForm({ onSubmit }) {
   const [formData, setFormData] = useState({
     name: "",
     studentId: "",
-    session: "2010-2011",
-    year: "1",
+    phone: "",
     email: "",
+    session: "",
+    year: "",
+    semester: "",
+    gender: "",
+    religion: "",
     address: "",
     district: "",
   });
 
   const sessions = [];
-  for (let y = 2010; y <= 2024; y++) sessions.push(`${y}-${y + 1}`);
+  for (let y = 2010; y <= 2024; y++) {
+    sessions.push(`${y}-${y + 1}`);
+  }
 
-  const years = ["1", "2", "3", "4"];
+  const years = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
+  const semesters = ["1st Semester", "2nd Semester"];
+  const genders = ["Male", "Female"];
+  const religions = ["Islam", "Hindu", "Christian", "Buddhist", "Others"];
 
   const districts = [
-    "Dhaka",
-    "Chittagong",
-    "Khulna",
-    "Rajshahi",
-    "Barisal",
-    "Sylhet",
-    "Rangpur",
-    "Mymensingh",
+    "Bagerhat","Bandarban","Barguna","Barishal","Bhola","Bogura","Brahmanbaria",
+    "Chandpur","Chattogram","Chuadanga","Cox’s Bazar","Cumilla","Dhaka","Dinajpur",
+    "Faridpur","Feni","Gaibandha","Gazipur","Gopalganj","Habiganj","Jamalpur",
+    "Jashore","Jhalokathi","Jhenaidah","Joypurhat","Khagrachhari","Khulna",
+    "Kishoreganj","Kurigram","Kushtia","Lakshmipur","Lalmonirhat","Madaripur",
+    "Magura","Manikganj","Meherpur","Moulvibazar","Munshiganj","Mymensingh",
+    "Naogaon","Narail","Narayanganj","Narsingdi","Natore","Netrokona",
+    "Nilphamari","Noakhali","Pabna","Panchagarh","Patuakhali","Pirojpur",
+    "Rajbari","Rajshahi","Rangamati","Rangpur","Satkhira","Shariatpur",
+    "Sherpur","Sirajganj","Sunamganj","Sylhet","Tangail","Thakurgaon"
   ];
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const confirm = await Swal.fire({
-      title: "Are all your information correct?",
-      text: "Please check everything before submitting.",
+      title: "Submit your information?",
+      text: "Please make sure all information is correct.",
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "Yes, Submit",
@@ -47,12 +59,11 @@ export default function StudentForm({ onSubmit }) {
 
     if (!confirm.isConfirmed) return;
 
-    onSubmit(formData);
+    onSubmit?.(formData);
 
     Swal.fire({
-      title: "Success!",
-      text: "Your student data has been submitted successfully.",
       icon: "success",
+      title: "Submitted Successfully!",
       timer: 2000,
       showConfirmButton: false,
     });
@@ -60,135 +71,174 @@ export default function StudentForm({ onSubmit }) {
     setFormData({
       name: "",
       studentId: "",
-      session: "2010-2011",
-      year: "1",
+      phone: "",
       email: "",
+      session: "",
+      year: "",
+      semester: "",
+      gender: "",
+      religion: "",
       address: "",
       district: "",
     });
   };
 
   return (
-    <div className="p-10  bg-white/80 backdrop-blur-md shadow-2xl rounded-2xl border border-gray-100">
-
-      <h1 className="text-3xl font-bold mb-8 text-blue-700 text-center tracking-wide">
-        Add Student (EEE)
+    <div className="p-10 bg-white/80 backdrop-blur-md shadow-2xl rounded-2xl">
+      <h1 className="text-3xl font-bold text-center text-blue-700 mb-8">
+        Students of  (EEE) BRUR
       </h1>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-7">
-
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+      >
         {/* Name */}
-        <div>
-          <label className="inputLabel">Name</label>
-          <input
-            type="text"
-            name="name"
-            placeholder="Enter full name"
-            onChange={handleChange}
-            value={formData.name}
-            className="inputField"
-            required
-          />
-        </div>
+        <input
+          type="text"
+          name="name"
+          placeholder="Full Name"
+          value={formData.name}
+          onChange={handleChange}
+          className="inputField"
+          required
+        />
 
         {/* Student ID */}
-        <div>
-          <label className="inputLabel">Student ID</label>
-          <input
-            type="text"
-            name="studentId"
-            placeholder="Enter Student ID"
-            onChange={handleChange}
-            value={formData.studentId}
-            className="inputField"
-            required
-          />
-        </div>
+        <input
+          type="text"
+          name="studentId"
+          placeholder="Student ID"
+          value={formData.studentId}
+          onChange={handleChange}
+          className="inputField"
+          required
+        />
 
-        {/* Session */}
-        <div>
-          <label className="inputLabel">Session</label>
-          <select
-            name="session"
-            value={formData.session}
-            onChange={handleChange}
-            className="inputField"
-          >
-            {sessions.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Year */}
-        <div>
-          <label className="inputLabel">Year</label>
-          <select
-            name="year"
-            value={formData.year}
-            onChange={handleChange}
-            className="inputField"
-          >
-            {years.map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-        </div>
+        {/* Phone */}
+        <input
+          type="tel"
+          name="phone"
+          placeholder="Phone Number"
+          value={formData.phone}
+          onChange={handleChange}
+          className="inputField"
+          required
+        />
 
         {/* Email */}
-        <div className="md:col-span-2">
-          <label className="inputLabel">Email</label>
-          <input
-            type="email"
-            name="email"
-            placeholder="Enter email address"
-            onChange={handleChange}
-            value={formData.email}
-            className="inputField"
-            required
-          />
-        </div>
+        <input
+          type="email"
+          name="email"
+          placeholder="Email Address"
+          value={formData.email}
+          onChange={handleChange}
+          className="inputField"
+          required
+        />
 
-        {/* Address */}
-        <div className="md:col-span-2">
-          <label className="inputLabel">Address</label>
-          <input
-            type="text"
-            name="address"
-            placeholder="Enter address"
-            onChange={handleChange}
-            value={formData.address}
-            className="inputField"
-            required
-          />
-        </div>
+        {/* Session */}
+        <select
+          name="session"
+          value={formData.session}
+          onChange={handleChange}
+          className="inputField"
+          required
+        >
+          <option value="" disabled>Select Session</option>
+          {sessions.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
+        {/* Year */}
+        <select
+          name="year"
+          value={formData.year}
+          onChange={handleChange}
+          className="inputField"
+          required
+        >
+          <option value="" disabled>Select Year</option>
+          {years.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+
+        {/* Semester */}
+        <select
+          name="semester"
+          value={formData.semester}
+          onChange={handleChange}
+          className="inputField"
+          required
+        >
+          <option value="" disabled>Select Semester</option>
+          {semesters.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
+        {/* Gender */}
+        <select
+          name="gender"
+          value={formData.gender}
+          onChange={handleChange}
+          className="inputField"
+          required
+        >
+          <option value="" disabled>Select Gender</option>
+          {genders.map((g) => (
+            <option key={g} value={g}>{g}</option>
+          ))}
+        </select>
+
+        {/* Religion */}
+        <select
+          name="religion"
+          value={formData.religion}
+          onChange={handleChange}
+          className="inputField"
+          required
+        >
+          <option value="" disabled>Select Religion</option>
+          {religions.map((r) => (
+            <option key={r} value={r}>{r}</option>
+          ))}
+        </select>
 
         {/* District */}
-        <div className="md:col-span-2">
-          <label className="inputLabel">District</label>
-          <select
-            name="district"
-            value={formData.district}
-            onChange={handleChange}
-            className="inputField"
-          >
-            <option value="">Select District</option>
-            {districts.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
-        </div>
+        <select
+          name="district"
+          value={formData.district}
+          onChange={handleChange}
+          className="inputField"
+          required
+        >
+          <option value="" disabled>Select District</option>
+          {districts.map((d) => (
+            <option key={d} value={d}>{d}</option>
+          ))}
+        </select>
 
-        {/* Submit Button */}
-        <div className="md:col-span-2">
-          <button
-            type="submit"
-            className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:scale-[1.02]"
-          >
-            Save Student
-          </button>
-        </div>
+        {/* Address */}
+        <input
+          type="text"
+          name="address"
+          placeholder="Full Address"
+          value={formData.address}
+          onChange={handleChange}
+          className="inputField md:col-span-2"
+          required
+        />
 
+        {/* Submit */}
+        <button
+          type="submit"
+          className="md:col-span-2 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold hover:scale-[1.02] transition"
+        >
+         Save Your Information
+        </button>
       </form>
     </div>
   );
