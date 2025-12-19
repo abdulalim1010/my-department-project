@@ -48,7 +48,7 @@ export default function AcademicFooter() {
           </p>
           <p className="text-gray-600">
             <span className="font-semibold text-gray-700">Address:</span>  
-            University Campus, Dhaka, Bangladesh
+            University Campus, BRUR, Bangladesh
           </p>
         </div>
       </div>
