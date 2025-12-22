@@ -10,13 +10,14 @@
   },
   "dependencies": {
     "firebase": "^12.7.0",
-    "framer-motion": "^12.23.25",
+    "framer-motion": "^12.23.26",
     "lucide-react": "^0.561.0",
     "mongodb": "^7.0.0",
     "next": "16.0.7",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "sweetalert2": "^11.26.4"
+    "sweetalert2": "^11.26.17",
+    "sweetalert2-react-content": "^5.1.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

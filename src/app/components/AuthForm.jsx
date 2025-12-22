@@ -8,6 +8,11 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { auth } from "./firebase";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import { motion } from "framer-motion";
+
+const MySwal = withReactContent(Swal);
 
 export default function AuthForm({ isLogin }) {
   const [name, setName] = useState("");
@@ -26,18 +31,20 @@ export default function AuthForm({ isLogin }) {
 
     try {
       if (isLogin) {
-        // LOGIN
         await signInWithEmailAndPassword(auth, email, password);
-        alert("Login successful");
+        await MySwal.fire({
+          icon: "success",
+          title: "Login successful",
+          timer: 1500,
+          showConfirmButton: false,
+        });
       } else {
-        // REGISTER
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           email,
           password
         );
 
-        // Save user info to MongoDB
         await fetch("/api/users", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -48,10 +55,20 @@ export default function AuthForm({ isLogin }) {
           }),
         });
 
-        alert("Registration successful");
+        await MySwal.fire({
+          icon: "success",
+          title: "Registration successful",
+          timer: 1500,
+          showConfirmButton: false,
+        });
       }
     } catch (err) {
       setError(err.message);
+      await MySwal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: err.message,
+      });
     } finally {
       setLoading(false);
     }
@@ -65,7 +82,6 @@ export default function AuthForm({ isLogin }) {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Save user info to MongoDB (if new)
       await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,45 +92,66 @@ export default function AuthForm({ isLogin }) {
         }),
       });
 
-      alert("Google Sign-In successful");
+      await MySwal.fire({
+        icon: "success",
+        title: `Welcome ${user.displayName}`,
+        text: "Google Sign-In successful",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } catch (err) {
       setError(err.message);
+      await MySwal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: err.message,
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-md space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         {!isLogin && (
-          <input
+          <motion.input
             type="text"
             placeholder="Full Name"
             className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+            whileFocus={{ scale: 1.02 }}
+            whileHover={{ scale: 1.01 }}
           />
         )}
 
-        <input
+        <motion.input
           type="email"
           placeholder="Email Address"
           className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          whileFocus={{ scale: 1.02 }}
+          whileHover={{ scale: 1.01 }}
         />
 
         <div className="relative">
-          <input
+          <motion.input
             type={showPassword ? "text" : "password"}
             placeholder="Password"
             className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            whileFocus={{ scale: 1.02 }}
+            whileHover={{ scale: 1.01 }}
           />
           <span
             onClick={togglePassword}
@@ -126,44 +163,41 @@ export default function AuthForm({ isLogin }) {
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        <button
+        <motion.button
           type="submit"
           disabled={loading}
           className="w-full py-3 bg-blue-700 text-white rounded-lg font-semibold hover:bg-blue-800 transition"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
         >
-          {loading
-            ? "Processing..."
-            : isLogin
-            ? "Login"
-            : "Register"}
-        </button>
+          {loading ? "Processing..." : isLogin ? "Login" : "Register"}
+        </motion.button>
       </form>
 
-      {!isLogin && (
-        <div className="mt-4 text-center">
-          <p className="mb-2">Or register with Google</p>
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="w-full py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition"
-          >
-            {loading ? "Processing..." : "Sign in with Google"}
-          </button>
-        </div>
-      )}
-
-      {isLogin && (
-        <div className="mt-4 text-center">
-          <p className="mb-2">Or sign in with Google</p>
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="w-full py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition"
-          >
-            {loading ? "Processing..." : "Sign in with Google"}
-          </button>
-        </div>
-      )}
-    </div>
+      <motion.div
+        className="mt-4 text-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <p className="mb-2">
+          Or {isLogin ? "sign in" : "register"} with Google
+        </p>
+        <motion.button
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className="w-full py-2 bg-white border flex items-center justify-center space-x-2 rounded-lg font-semibold hover:bg-gray-100 transition"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <img
+            src="/google.jpg"
+            alt="Google logo"
+            className="w-8 h-8 rounded-full"
+          />
+          <span>{loading ? "Processing..." : "Continue with Google"}</span>
+        </motion.button>
+      </motion.div>
+    </motion.div>
   );
 }
