@@ -100,8 +100,8 @@ export default function Navbar() {
       name: "Notice",
       icon: BookOpen,
       submenu: [
-        { label: "General Notices", href: "/notice" },
-        { label: "Exam Notices", href: "/notice/exam" },
+        { label: " Notices", href: "/notice" },
+        
       ],
     },
   ];

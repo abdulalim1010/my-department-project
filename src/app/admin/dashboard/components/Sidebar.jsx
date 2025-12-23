@@ -7,6 +7,7 @@ import {
   Users,
   FileText,
   Settings,
+  Bell,
   LogOut
 } from "lucide-react";
 import { signOut } from "firebase/auth";
@@ -17,7 +18,9 @@ const menu = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Users", href: "/admin/dashboard/users", icon: Users },
   { name: "Articles", href: "/admin/dashboard/articles", icon: FileText },
+  { name: "Notice", href: "/admin/dashboard/notice", icon: Bell },
   { name: "Settings", href: "/admin/dashboard/settings", icon: Settings },
+  
 ];
 
 export default function Sidebar() {
