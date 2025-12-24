@@ -27,17 +27,18 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [hoverMenu, setHoverMenu] = useState(null);
   const [expandedMenu, setExpandedMenu] = useState(null);
+  const [hoverMenu, setHoverMenu] = useState(null);
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
+  const [showHeader, setShowHeader] = useState(true);
+  const [lastScroll, setLastScroll] = useState(0);
 
-  /* 🔐 Auth + Role */
+  /* ================= AUTH ================= */
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-
         try {
           const res = await fetch("/api/users/me", {
             headers: { email: currentUser.email },
@@ -52,7 +53,6 @@ export default function Navbar() {
         setRole(null);
       }
     });
-
     return () => unsub();
   }, []);
 
@@ -62,7 +62,22 @@ export default function Navbar() {
     setRole(null);
   };
 
-  /* ===== NAV LINKS ===== */
+  /* ================= HIDE ON SCROLL ================= */
+  useEffect(() => {
+    const handleScroll = () => {
+      const current = window.scrollY;
+      if (current > lastScroll && current > 80) {
+        setShowHeader(false);
+      } else {
+        setShowHeader(true);
+      }
+      setLastScroll(current);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScroll]);
+
+  /* ================= NAV LINKS ================= */
   const navLinks = [
     { name: "Home", icon: Home, href: "/" },
     {
@@ -99,75 +114,72 @@ export default function Navbar() {
     {
       name: "Notice",
       icon: BookOpen,
-      submenu: [
-        { label: " Notices", href: "/notice" },
-        
-      ],
+      submenu: [{ label: "Notices", href: "/notice" }],
     },
   ];
 
   return (
     <>
-      {/* ================= TOP SUB NAVBAR ================= */}
-      <div className="fixed top-0 left-0 w-full bg-slate-900 text-white text-sm z-50">
-        <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
+      {/* ================= TOP BAR ================= */}
+      <motion.div
+        animate={{ y: showHeader ? 0 : -60 }}
+        className="fixed top-0 left-0 w-full bg-slate-900 text-white z-50"
+      >
+        <div className="max-w-7xl mx-auto px-4 py-2 flex flex-col sm:flex-row gap-2 sm:justify-between text-xs sm:text-sm">
           <div className="flex items-center gap-2">
-            <Mail size={14} />
-            <span>brureee@department.edu</span>
+            <Mail size={14} /> brureee@department.edu
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 flex-wrap">
             {role === "admin" && (
               <Link
                 href="/admin/dashboard"
-                className="px-3 py-1 bg-yellow-400 text-black rounded font-semibold hover:bg-yellow-500"
+                className="px-2 py-1 bg-yellow-400 text-black rounded"
               >
-                🛠 Admin Dashboard
+                Admin
               </Link>
             )}
 
             {user ? (
               <>
-                <span>{user.email}</span>
+                <span className="hidden sm:block">{user.email}</span>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-1 px-3 py-1 bg-red-600 rounded hover:bg-red-700"
+                  className="flex items-center gap-1 px-2 py-1 bg-red-600 rounded"
                 >
-                  <LogOut size={14} /> Logout
+                  <LogOut size={12} /> Logout
                 </button>
               </>
             ) : (
               <Link
                 href="/auth"
-                className="px-3 py-1 bg-green-600 rounded hover:bg-green-700"
+                className="px-2 py-1 bg-green-600 rounded"
               >
                 Sign In
               </Link>
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* ================= MAIN NAVBAR ================= */}
+      {/* ================= MAIN NAV ================= */}
       <motion.header
-        initial={{ y: -80 }}
-        animate={{ y: 0 }}
-        className="fixed top-[40px] left-0 w-full bg-blue-700 z-40"
+        animate={{ y: showHeader ? 0 : -80 }}
+        className="fixed top-[48px] left-0 w-full bg-blue-700 z-40"
       >
         <nav className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          {/* LOGO */}
           <Link href="/" className="flex items-center gap-3">
-            <Image src={logoimage} alt="Logo" width={40} height={40} />
-            <span className="text-xl font-bold text-white">
+            <Image src={logoimage} alt="Logo" width={36} height={36} />
+            <span className="text-lg font-bold text-white">
               My Department
             </span>
           </Link>
 
-          {/* ===== DESKTOP MENU ===== */}
-          <ul className="hidden md:flex items-center gap-8 text-white font-medium">
+          {/* ================= DESKTOP MENU ================= */}
+          <ul className="hidden md:flex gap-8 text-white relative">
             {navLinks.map((link) => {
               const Icon = link.icon;
-              const isActive = link.href && pathname === link.href;
+              const active = pathname === link.href;
 
               return (
                 <li
@@ -177,59 +189,50 @@ export default function Navbar() {
                   onMouseLeave={() => setHoverMenu(null)}
                 >
                   {!link.submenu ? (
-                    <Link
-                      href={link.href}
-                      className={`flex items-center gap-2 transition
-                        ${isActive ? "text-yellow-300" : "hover:text-blue-300"}`}
-                    >
+                    <Link href={link.href} className="flex gap-2 items-center">
                       <Icon size={18} />
                       {link.name}
+                      {active && (
+                        <motion.span
+                          layoutId="underline"
+                          className="absolute -bottom-2 left-0 h-[2px] w-full bg-yellow-300"
+                        />
+                      )}
                     </Link>
                   ) : (
-                    <button className="flex items-center gap-2 hover:text-blue-300">
+                    <span className="flex gap-2 items-center cursor-pointer">
                       <Icon size={18} />
                       {link.name}
-                    </button>
+                    </span>
                   )}
 
-                  {/* SUBMENU */}
-                  <AnimatePresence>
-                    {link.submenu && hoverMenu === link.name && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        className="absolute left-0 mt-4 w-64 bg-white rounded-xl shadow-xl p-4"
-                      >
-                        {link.submenu.map((sub) => (
-                          <Link
-                            key={sub.href}
-                            href={sub.href}
-                            className="block px-4 py-2 rounded-lg hover:bg-blue-100 text-gray-700"
-                          >
-                            {sub.label}
-                          </Link>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {link.submenu && hoverMenu === link.name && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute left-0 mt-4 w-60 bg-white rounded shadow p-3"
+                    >
+                      {link.submenu.map((sub) => (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className="block px-3 py-2 hover:bg-blue-100 rounded"
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
                 </li>
               );
             })}
 
-            {/* CONTACT */}
-            <li>
-              <Link
-                href="/contact"
-                className="flex items-center gap-2 hover:text-blue-300"
-              >
-                <Phone size={18} />
-                Contact
-              </Link>
-            </li>
+            <Link href="/contact" className="flex gap-2 items-center">
+              <Phone size={18} /> Contact
+            </Link>
           </ul>
 
-          {/* ===== MOBILE BUTTON ===== */}
+          {/* ================= MOBILE BUTTON ================= */}
           <button
             className="md:hidden text-white"
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -238,14 +241,14 @@ export default function Navbar() {
           </button>
         </nav>
 
-        {/* ===== MOBILE MENU ===== */}
+        {/* ================= MOBILE MENU ================= */}
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
               initial={{ height: 0 }}
-              animate={{ height: "auto" }}
+              animate={{ height: "calc(100vh - 120px)" }}
               exit={{ height: 0 }}
-              className="md:hidden bg-white"
+              className="md:hidden bg-white overflow-y-auto"
             >
               <ul className="px-6 py-4 space-y-4">
                 {navLinks.map((link) => (
@@ -254,6 +257,11 @@ export default function Navbar() {
                       <Link
                         href={link.href}
                         onClick={() => setMobileOpen(false)}
+                        className={`block ${
+                          pathname === link.href
+                            ? "text-blue-600 font-semibold"
+                            : ""
+                        }`}
                       >
                         {link.name}
                       </Link>
@@ -268,13 +276,11 @@ export default function Navbar() {
                           }
                         >
                           {link.name}
-                          <span>
-                            {expandedMenu === link.name ? "−" : "+"}
-                          </span>
+                          <span>{expandedMenu === link.name ? "−" : "+"}</span>
                         </div>
 
                         {expandedMenu === link.name && (
-                          <div className="pl-4 space-y-2 mt-2">
+                          <div className="pl-4 mt-2 space-y-2">
                             {link.submenu.map((sub) => (
                               <Link
                                 key={sub.href}
@@ -291,10 +297,6 @@ export default function Navbar() {
                     )}
                   </li>
                 ))}
-
-                <li>
-                  <Link href="/contact">Contact</Link>
-                </li>
               </ul>
             </motion.div>
           )}
@@ -302,7 +304,7 @@ export default function Navbar() {
       </motion.header>
 
       {/* SPACER */}
-      <div className="h-[130px]" />
+      <div className="h-[140px]" />
     </>
   );
 }
