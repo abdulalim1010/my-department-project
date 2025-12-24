@@ -1,4 +1,4 @@
-give me full code and fixed header nav ta mobile a venge jai "use client";
+ "use client";
 
 import Image from "next/image";
 import Link from "next/link";
