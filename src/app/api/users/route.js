@@ -6,7 +6,6 @@ import clientPromise from "@/lib/mongodb";
 export async function POST(req) {
   try {
     const data = await req.json();
-
     const { name, email, firebaseUid } = data;
 
     if (!name || !email || !firebaseUid) {
@@ -17,32 +16,34 @@ export async function POST(req) {
     }
 
     const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DB);
+    const db = client.db("departmentDB"); // ✅ fixed DB name
 
-    // check existing
+    // Check existing user
     const existingUser = await db.collection("users").findOne({ email });
     if (existingUser) {
       return new Response(
-        JSON.stringify({ message: "User already exists" }),
+        JSON.stringify({
+          message: "User already exists",
+          role: existingUser.role,
+        }),
         { status: 200 }
       );
     }
 
-    // 🔐 Admin email list (change as needed)
+    // 🔐 Admin emails
     const ADMIN_EMAILS = [
       "admin@mydepartment.edu",
       "chairman@mydepartment.edu",
     ];
 
-    const role = ADMIN_EMAILS.includes(email)
-      ? "admin"
-      : "student";
+    // ✅ FINAL ROLE LOGIC
+    const role = ADMIN_EMAILS.includes(email) ? "admin" : "user";
 
     const result = await db.collection("users").insertOne({
       name,
       email,
       firebaseUid,
-      role,
+      role, // user | admin
       createdAt: new Date(),
     });
 
@@ -63,21 +64,17 @@ export async function POST(req) {
 }
 
 /**
- * GET: Get all users (admin use)
+ * GET: Get all users (admin dashboard)
  */
 export async function GET() {
   try {
     const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DB);
+    const db = client.db("departmentDB");
 
-    const users = await db
-      .collection("users")
-      .find({}, { projection: { password: 0 } })
-      .toArray();
+    const users = await db.collection("users").find().toArray();
 
     return new Response(JSON.stringify(users), { status: 200 });
   } catch (error) {
-    console.error(error);
     return new Response(
       JSON.stringify({ error: "Failed to fetch users" }),
       { status: 500 }
