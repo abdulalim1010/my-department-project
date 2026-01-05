@@ -1,0 +1,16 @@
+import clientPromise from "@/lib/mongodb";
+import { NextResponse } from "next/server";
+
+export async function POST(req) {
+  const { slug } = await req.json();
+
+  const client = await clientPromise;
+  const db = client.db("departmentDB");
+
+  await db.collection("news").updateOne(
+    { slug },
+    { $inc: { views: 1 } }
+  );
+
+  return NextResponse.json({ success: true });
+}
