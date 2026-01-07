@@ -2,15 +2,30 @@ import clientPromise from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
-  const { slug } = await req.json();
+  try {
+    const { slug } = await req.json();
 
-  const client = await clientPromise;
-  const db = client.db("departmentDB");
+    if (!slug) {
+      return NextResponse.json(
+        { error: "Slug required" },
+        { status: 400 }
+      );
+    }
 
-  await db.collection("news").updateOne(
-    { slug },
-    { $inc: { views: 1 } }
-  );
+    const client = await clientPromise;
+    const db = client.db("departmentDB");
 
-  return NextResponse.json({ success: true });
+    await db.collection("news").updateOne(
+      { slug },
+      { $inc: { views: 1 } }
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Views API error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
 }
