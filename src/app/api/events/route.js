@@ -2,44 +2,35 @@ import clientPromise from "@/lib/mongodb";
 
 export async function GET() {
   try {
+    // env check (VERY IMPORTANT)
+    if (!process.env.MONGODB_URI || !process.env.MONGODB_DB) {
+      return new Response(
+        JSON.stringify({ error: "Database env not configured" }),
+        { status: 500 }
+      );
+    }
+
     const client = await clientPromise;
     const db = client.db(process.env.MONGODB_DB);
 
     const events = await db
       .collection("events")
       .find({})
-      .sort({ date: 1 })
+      .sort({ createdAt: -1 })
       .toArray();
 
-    return new Response(JSON.stringify(events), { status: 200 });
+    // ✅ serialize MongoDB data
+    const safeEvents = events.map((item) => ({
+      ...item,
+      _id: item._id.toString(),
+      createdAt: item.createdAt?.toISOString?.() || null,
+    }));
+
+    return new Response(JSON.stringify(safeEvents), { status: 200 });
   } catch (error) {
+    console.error("API /events error:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to load events" }),
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(req) {
-  try {
-    const body = await req.json();
-    const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DB);
-
-    const newEvent = {
-      ...body,
-      createdAt: new Date(),
-    };
-
-    const result = await db.collection("events").insertOne(newEvent);
-
-    return new Response(
-      JSON.stringify({ insertedId: result.insertedId }),
-      { status: 201 }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: "Failed to add event" }),
+      JSON.stringify({ error: "Failed to fetch events" }),
       { status: 500 }
     );
   }
