@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+
+
 import ViewCounter from "@/app/components/ViewCounter";
 import clientPromise from "@/lib/mongodb";
 
