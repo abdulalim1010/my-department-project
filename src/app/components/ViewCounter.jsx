@@ -3,22 +3,29 @@
 import { useEffect, useState } from "react";
 
 export default function ViewCounter({ slug }) {
-  const [views, setViews] = useState(0);
+  const [views, setViews] = useState(null);
 
   useEffect(() => {
     if (!slug) return;
 
-    fetch(`/api/news/view?slug=${slug}`, {
+    // 1️⃣ Increment view
+    fetch("/api/news/views", {
       method: "POST",
-    })
-      .then((res) => res.json())
-      .then((data) => setViews(data.views))
-      .catch(() => {});
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug }),
+    });
+
+    // 2️⃣ Fetch updated views
+    fetch(`/api/news/${slug}/views`)
+      .then(res => res.json())
+      .then(data => setViews(data.views));
   }, [slug]);
 
+  if (views === null) return null;
+
   return (
-    <div className="mt-2 text-sm text-gray-500">
+    <p className="mt-3 text-sm text-gray-500">
       👁 {views} views
-    </div>
+    </p>
   );
 }

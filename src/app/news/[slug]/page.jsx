@@ -3,12 +3,13 @@ import clientPromise from "@/lib/mongodb";
 
 
 export default async function SingleNews({ params }) {
-  // ✅ MUST unwrap params
+  // ✅ Next.js 16 requires await
   const { slug } = await params;
 
   const client = await clientPromise;
   const db = client.db("departmentDB");
 
+  // ✅ DEFINE news
   const news = await db.collection("news").findOne({ slug });
 
   if (!news) {
@@ -17,11 +18,12 @@ export default async function SingleNews({ params }) {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-16">
+
       <h1 className="text-4xl font-bold text-gray-900">
         {news.title}
       </h1>
 
-      {/* VIEW COUNTER */}
+      {/* 👁 VIEW COUNTER (CLIENT) */}
       <ViewCounter slug={slug} />
 
       <img
