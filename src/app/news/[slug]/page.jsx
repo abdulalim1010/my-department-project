@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+
 
 
 import ViewCounter from "@/app/components/ViewCounter";
