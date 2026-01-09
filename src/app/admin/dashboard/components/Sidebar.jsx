@@ -20,7 +20,8 @@ const menu = [
   { name: "Articles", href: "/admin/dashboard/articles", icon: FileText },
   { name: "Notice", href: "/admin/dashboard/notice", icon: Bell },
   { name: "Settings", href: "/admin/dashboard/settings", icon: Settings },
-  
+  { name: "Academic Files", href: "/admin/dashboard/academic", icon: FileText }
+
 ];
 
 export default function Sidebar() {
