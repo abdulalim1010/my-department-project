@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from "react";
 
+const TYPES = ["all", "note", "book", "routine", "syllabus"];
+
 export default function AcademicAdminPage() {
   const [files, setFiles] = useState([]);
+  const [filter, setFilter] = useState("all");
+
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
   const [type, setType] = useState("note");
@@ -13,15 +17,8 @@ export default function AcademicAdminPage() {
   /* ================= FETCH FILES ================= */
   const fetchFiles = async () => {
     try {
-      const res = await fetch("/api/academic", {
-        cache: "no-store",
-      });
-
-      if (!res.ok) {
-        console.error("Fetch failed:", res.status);
-        return;
-      }
-
+      const res = await fetch("/api/academic", { cache: "no-store" });
+      if (!res.ok) return;
       const data = await res.json();
       setFiles(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -33,13 +30,17 @@ export default function AcademicAdminPage() {
     fetchFiles();
   }, []);
 
+  /* ================= FILTER ================= */
+  const filteredFiles =
+    filter === "all" ? files : files.filter((f) => f.type === filter);
+
   /* ================= FILE → BASE64 ================= */
   const toBase64 = (file) =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result);
-      reader.onerror = (err) => reject(err);
+      reader.onerror = reject;
     });
 
   /* ================= UPLOAD ================= */
@@ -58,9 +59,7 @@ export default function AcademicAdminPage() {
 
       const res = await fetch("/api/academic", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
           subject,
@@ -69,17 +68,13 @@ export default function AcademicAdminPage() {
         }),
       });
 
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err || "Upload failed");
-      }
+      if (!res.ok) throw new Error("Upload failed");
 
       setTitle("");
       setSubject("");
       setType("note");
       setFile(null);
-
-      await fetchFiles();
+      fetchFiles();
     } catch (err) {
       console.error("Upload error:", err);
       alert("Upload failed");
@@ -90,7 +85,7 @@ export default function AcademicAdminPage() {
 
   /* ================= DELETE ================= */
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure?")) return;
+    if (!confirm("Are you sure you want to delete this file?")) return;
 
     try {
       const res = await fetch(`/api/academic/${id}`, {
@@ -108,34 +103,50 @@ export default function AcademicAdminPage() {
 
   /* ================= UI ================= */
   return (
-    <div className="space-y-12">
-      <h1 className="text-2xl font-bold">Academic Files Management</h1>
+    <div className="space-y-10">
+      <h1 className="text-2xl font-bold">Academic Management</h1>
 
-      {/* ================= UPLOAD FORM ================= */}
+      {/* ===== FILTER TABS ===== */}
+      <div className="flex gap-3 flex-wrap">
+        {TYPES.map((t) => (
+          <button
+            key={t}
+            onClick={() => setFilter(t)}
+            className={`px-4 py-1 rounded-full text-sm
+              ${
+                filter === t
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-700"
+              }`}
+          >
+            {t.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
+      {/* ===== UPLOAD FORM ===== */}
       <form
         onSubmit={handleUpload}
         className="bg-white p-6 rounded-xl shadow space-y-4 max-w-xl"
       >
         <input
-          type="text"
-          placeholder="File Title"
+          placeholder="File title"
+          className="w-full border p-2 rounded"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full border px-4 py-2 rounded"
         />
 
         <input
-          type="text"
           placeholder="Subject (EEE)"
+          className="w-full border p-2 rounded"
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-          className="w-full border px-4 py-2 rounded"
         />
 
         <select
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className="w-full border px-4 py-2 rounded"
+          className="w-full border p-2 rounded"
         >
           <option value="note">Class Note</option>
           <option value="book">Book</option>
@@ -147,37 +158,29 @@ export default function AcademicAdminPage() {
           type="file"
           accept=".pdf,.doc,.docx,.ppt,.pptx"
           onChange={(e) => setFile(e.target.files?.[0] || null)}
-          className="w-full"
         />
 
         <button
           disabled={loading}
-          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+          className="bg-blue-600 text-white px-6 py-2 rounded disabled:opacity-50"
         >
           {loading ? "Uploading..." : "Upload File"}
         </button>
       </form>
 
-      {/* ================= FILE LIST ================= */}
+      {/* ===== FILE LIST ===== */}
       <div className="grid md:grid-cols-2 gap-6">
-        {files.length === 0 && (
-          <p className="text-gray-500">No academic files uploaded yet.</p>
+        {filteredFiles.length === 0 && (
+          <p className="text-gray-500">No files found.</p>
         )}
 
-        {files.map((f) => (
+        {filteredFiles.map((f) => (
           <div
             key={f._id}
-            className="bg-white p-5 rounded-xl shadow flex justify-between items-start"
+            className="bg-white p-4 rounded shadow flex justify-between"
           >
             <div>
-              <span
-                className={`inline-block text-xs px-2 py-1 rounded-full mb-2
-                  ${f.type === "note" ? "bg-blue-100 text-blue-700" : ""}
-                  ${f.type === "book" ? "bg-green-100 text-green-700" : ""}
-                  ${f.type === "routine" ? "bg-orange-100 text-orange-700" : ""}
-                  ${f.type === "syllabus" ? "bg-purple-100 text-purple-700" : ""}
-                `}
-              >
+              <span className="text-xs font-semibold text-blue-600">
                 {f.type.toUpperCase()}
               </span>
 
@@ -188,15 +191,16 @@ export default function AcademicAdminPage() {
                 href={f.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 text-sm underline"
+                className="text-sm text-blue-600 underline"
               >
                 View / Download
               </a>
             </div>
 
+            {/* 🔴 DELETE BUTTON */}
             <button
               onClick={() => handleDelete(f._id)}
-              className="text-red-600 hover:underline text-sm"
+              className="text-red-600 text-sm hover:underline"
             >
               Delete
             </button>

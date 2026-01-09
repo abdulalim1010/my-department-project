@@ -71,7 +71,7 @@ export default function Navbar() {
       submenu: [
         { label: "Class Notes", href: "/academic/class-notes" },
         { label: "Books", href: "/academic/books" },
-        { label: "Exam Routine", href: "/academic/exam-routine" },
+        { label: " Routine", href: "/academic/routine" },
       ],
     },
     {

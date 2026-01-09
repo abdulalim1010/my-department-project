@@ -2,9 +2,17 @@ import clientPromise from "@/lib/mongodb";
 import cloudinary from "@/lib/cloudinary";
 import { ObjectId } from "mongodb";
 
-export async function DELETE(req, { params }) {
+export async function DELETE(req, context) {
   try {
-    const { id } = params;
+    // ✅ FIX: params await করতে হবে
+    const { id } = await context.params;
+
+    if (!id) {
+      return new Response(
+        JSON.stringify({ error: "ID missing" }),
+        { status: 400 }
+      );
+    }
 
     const client = await clientPromise;
     const db = client.db(process.env.MONGODB_DB);
@@ -20,23 +28,27 @@ export async function DELETE(req, { params }) {
       );
     }
 
-    // Delete from Cloudinary
+    // ☁️ Cloudinary delete
     if (file.publicId) {
       await cloudinary.uploader.destroy(file.publicId, {
         resource_type: "raw",
       });
     }
 
-    // Delete from DB
+    // 🗑️ MongoDB delete
     await db
       .collection("academic")
       .deleteOne({ _id: new ObjectId(id) });
 
-    return new Response(JSON.stringify({ ok: true }), { status: 200 });
-  } catch (error) {
-    console.error("ACADEMIC DELETE ERROR:", error);
     return new Response(
-      JSON.stringify({ error: "Delete failed" }),
+      JSON.stringify({ success: true }),
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("DELETE ERROR:", error);
+
+    return new Response(
+      JSON.stringify({ error: error.message }),
       { status: 500 }
     );
   }
