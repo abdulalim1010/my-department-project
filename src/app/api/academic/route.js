@@ -21,7 +21,7 @@ export async function GET(req) {
       query.semester = searchParams.get("semester").toLowerCase();
 
     const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DB);
+    const db = client.db(process.env.MONGODB_DB || "departmentDB");
 
     const files = await db
       .collection("academic")
@@ -32,7 +32,7 @@ export async function GET(req) {
     return Response.json(files);
   } catch (error) {
     console.error("ACADEMIC GET ERROR:", error);
-    return Response.json({ error: "Fetch failed" }, { status: 500 });
+    return Response.json({ error: "Failed to fetch files" }, { status: 500 });
   }
 }
 
@@ -57,7 +57,7 @@ export async function POST(req) {
     });
 
     const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DB);
+    const db = client.db(process.env.MONGODB_DB || "departmentDB");
 
     const rawViewUrl = upload.secure_url; // view in browser
     const downloadUrl = rawViewUrl + "?dl=1"; // force download
@@ -76,10 +76,13 @@ export async function POST(req) {
       createdAt: new Date(),
     });
 
-    return Response.json({ ok: true }, { status: 201 });
+    return Response.json({ ok: true, message: "File uploaded successfully" }, { status: 201 });
   } catch (error) {
     console.error("ACADEMIC POST ERROR:", error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json(
+      { error: error.message || "Failed to upload file. Please try again." },
+      { status: 500 }
+    );
   }
 }
 
@@ -95,7 +98,7 @@ export async function DELETE(req) {
     }
 
     const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DB);
+    const db = client.db(process.env.MONGODB_DB || "departmentDB");
 
     const file = await db
       .collection("academic")
@@ -105,15 +108,25 @@ export async function DELETE(req) {
       return Response.json({ error: "File not found" }, { status: 404 });
     }
 
-    // Delete from Cloudinary
-    await cloudinary.uploader.destroy(file.publicId, { resource_type: "raw" });
+    // Delete from Cloudinary if publicId exists
+    if (file.publicId) {
+      try {
+        await cloudinary.uploader.destroy(file.publicId, { resource_type: "raw" });
+      } catch (cloudinaryError) {
+        console.error("Cloudinary delete error:", cloudinaryError);
+        // Continue with MongoDB deletion even if Cloudinary deletion fails
+      }
+    }
 
     // Delete from MongoDB
     await db.collection("academic").deleteOne({ _id: new ObjectId(id) });
 
-    return Response.json({ ok: true });
+    return Response.json({ ok: true, message: "File deleted successfully" });
   } catch (error) {
     console.error("ACADEMIC DELETE ERROR:", error);
-    return Response.json({ error: "Delete failed" }, { status: 500 });
+    return Response.json(
+      { error: error.message || "Failed to delete file" },
+      { status: 500 }
+    );
   }
 }

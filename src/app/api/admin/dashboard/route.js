@@ -2,26 +2,34 @@ import clientPromise from "@/lib/mongodb";
 
 export async function GET(req) {
   try {
-    // req.url theke search params ber koro
-    const url = new URL(req.url); // Next.js automatically passes full URL
-    const email = url.searchParams.get("email");
-
-    if (!email) {
-      return new Response(JSON.stringify({ role: null, error: "Email missing" }), { status: 400 });
-    }
-
     const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DB);
+    const db = client.db(process.env.MONGODB_DB || "departmentDB");
 
-    const user = await db.collection("users").findOne({ email });
+    // Get total users count
+    const totalUsers = await db.collection("users").countDocuments();
 
-    if (!user) {
-      return new Response(JSON.stringify({ role: null, error: "User not found" }), { status: 404 });
-    }
+    // Get total academic files count
+    const totalAcademicFiles = await db.collection("academic").countDocuments();
 
-    return new Response(JSON.stringify({ role: user.role || null }), { status: 200 });
+    // Get total notices count
+    const totalNotices = await db.collection("notices").countDocuments();
+
+    // Get pending items (you can customize this based on your needs)
+    const pendingItems = await db.collection("notices").countDocuments({ 
+      status: "pending" 
+    });
+
+    return Response.json({
+      users: totalUsers,
+      academicFiles: totalAcademicFiles,
+      notices: totalNotices,
+      pending: pendingItems || 0,
+    });
   } catch (err) {
-    console.error("API /admin/check error:", err);
-    return new Response(JSON.stringify({ role: null, error: "Server error" }), { status: 500 });
+    console.error("API /admin/dashboard error:", err);
+    return Response.json(
+      { error: "Failed to fetch dashboard data", users: 0, academicFiles: 0, notices: 0, pending: 0 },
+      { status: 500 }
+    );
   }
 }

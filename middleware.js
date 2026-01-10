@@ -1,40 +1,31 @@
-import clientPromise from "@/lib/mongodb";
 import { NextResponse } from "next/server";
-
 
 export function middleware(req) {
   const token = req.cookies.get("token")?.value;
 
-  // ❌ not logged in
+  // ❌ not logged in - redirect to auth page
   if (!token) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/auth", req.url));
   }
 
   try {
-    // 🔓 decode JWT payload (basic check)
+    // 🔓 decode JWT payload (basic check without DB call)
     const payload = JSON.parse(
       Buffer.from(token.split(".")[1], "base64").toString()
     );
 
-    const email = payload.email;
+    // Basic token validation - role check will be done in the page component
+    // Middleware should be lightweight and not do async DB calls
+    if (!payload || !payload.email) {
+      return NextResponse.redirect(new URL("/auth", req.url));
+    }
 
-    return handleRoleCheck(req, email);
+    // Allow through - actual admin check happens in useAdmin hook
+    return NextResponse.next();
   } catch (error) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    console.error("Middleware error:", error);
+    return NextResponse.redirect(new URL("/auth", req.url));
   }
-}
-
-async function handleRoleCheck(req, email) {
-  const client = await clientPromise;
-  const db = client.db("departmentDB");
-
-  const user = await db.collection("users").findOne({ email });
-
-  if (!user || user.role !== "admin") {
-    return NextResponse.redirect(new URL("/", req.url));
-  }
-
-  return NextResponse.next();
 }
 
 export const config = {
