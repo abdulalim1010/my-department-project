@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-
 import { useRouter } from "next/navigation";
 import { auth } from "@/app/components/firebase";
 
@@ -14,22 +13,36 @@ export default function useAdmin() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        router.push("/login");
+        router.push("/auth");
+        setLoading(false);
         return;
       }
 
-      const res = await fetch(
-        `/api/admin/check?email=${user.email}`
-      );
-      const data = await res.json();
+      try {
+        const res = await fetch(`/api/admin/check?email=${user.email}`);
+        const text = await res.text();
+        let userData;
 
-      if (!data.admin) {
+        try {
+          userData = JSON.parse(text);
+        } catch {
+          console.error("Invalid JSON:", text);
+          router.push("/unauthorized");
+          setLoading(false);
+          return;
+        }
+
+        if (userData.role !== "admin") {
+          router.push("/unauthorized");
+        } else {
+          setIsAdmin(true);
+        }
+      } catch (err) {
+        console.error("Fetch failed:", err);
         router.push("/unauthorized");
-      } else {
-        setIsAdmin(true);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     });
 
     return () => unsub();

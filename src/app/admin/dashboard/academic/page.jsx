@@ -178,6 +178,7 @@ export default function AcademicAdminPage() {
               </p>
 
               <div className="flex justify-between pt-3 text-sm">
+                {/* VIEW LINK */}
                 <a
                   href={f.fileUrl}
                   target="_blank"
@@ -187,9 +188,10 @@ export default function AcademicAdminPage() {
                   View
                 </a>
 
+                {/* DOWNLOAD LINK */}
                 <a
-                  href={f.downloadUrl}
-                  download
+                  href={f.fileUrl}          // original file URL
+                  download={f.fileName}     // proper file name
                   className="text-green-600 underline"
                 >
                   Download
