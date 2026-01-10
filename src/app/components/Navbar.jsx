@@ -17,6 +17,7 @@ import {
   GraduationCap,
   LogOut,
   Mail,
+  Bell,
 } from "lucide-react";
 
 import logoimage from "../../../src/assets/logoo.png";
@@ -31,6 +32,9 @@ export default function Navbar() {
   const [expandedMenu, setExpandedMenu] = useState(null);
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
+  const [notices, setNotices] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   /* 🔐 Auth + Role */
   useEffect(() => {
@@ -56,6 +60,51 @@ export default function Navbar() {
     return () => unsub();
   }, []);
 
+  /* 🔔 Fetch Notices for Notifications */
+  useEffect(() => {
+    const fetchNotices = async () => {
+      try {
+        const res = await fetch("/api/notices", { cache: "no-store" });
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          // Get recent notices (last 5)
+          const recentNotices = data
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 5);
+          setNotices(recentNotices);
+          // Check for unread (notices from last 24 hours)
+          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          const unread = recentNotices.filter(
+            (n) => new Date(n.createdAt) > oneDayAgo
+          ).length;
+          setUnreadCount(unread);
+        }
+      } catch (err) {
+        console.error("Failed to fetch notices:", err);
+      }
+    };
+
+    fetchNotices();
+    // Refresh notices every 5 minutes
+    const interval = setInterval(fetchNotices, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  /* Click outside to close notifications */
+  useEffect(() => {
+    if (!showNotifications) return;
+    
+    const handleClickOutside = (event) => {
+      const target = event.target;
+      if (!target.closest('.notification-dropdown')) {
+        setShowNotifications(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showNotifications]);
+
   const handleLogout = async () => {
     await signOut(auth);
     setUser(null);
@@ -71,7 +120,8 @@ export default function Navbar() {
       submenu: [
         { label: "Class Notes", href: "/academic/class-notes" },
         { label: "Books", href: "/academic/books" },
-        { label: " Routine", href: "/academic/routine" },
+        { label: "Routine", href: "/academic/routine" },
+        { label: "Syllabus", href: "/academic/syllabus" },
       ],
     },
     {
@@ -164,7 +214,73 @@ export default function Navbar() {
           </Link>
 
           {/* ===== DESKTOP MENU ===== */}
-          <ul className="hidden md:flex items-center gap-8 text-white font-medium">
+          <ul className="hidden md:flex items-center gap-6 text-white font-medium">
+            {/* Notification Bell */}
+            <li className="relative notification-dropdown">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2 hover:bg-blue-600 rounded-lg transition"
+                aria-label="Notifications"
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+              
+              {/* Notifications Dropdown */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-96 overflow-y-auto notification-dropdown">
+                  <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 className="font-semibold text-gray-800">Recent Notices</h3>
+                    <button
+                      onClick={() => setShowNotifications(false)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                  {notices.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      No notices available
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {notices.map((notice) => (
+                        <Link
+                          key={notice._id}
+                          href="/notice"
+                          onClick={() => setShowNotifications(false)}
+                          className="block p-4 hover:bg-blue-50 transition"
+                        >
+                          <h4 className="font-semibold text-gray-800 text-sm mb-1 line-clamp-1">
+                            {notice.title}
+                          </h4>
+                          <p className="text-xs text-gray-600 line-clamp-2 mb-2">
+                            {notice.description}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(notice.createdAt).toLocaleDateString()}
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                  <div className="p-3 border-t border-gray-200 text-center">
+                    <Link
+                      href="/notice"
+                      onClick={() => setShowNotifications(false)}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      View All Notices
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </li>
+
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = link.href && pathname === link.href;
@@ -231,8 +347,9 @@ export default function Navbar() {
 
           {/* ===== MOBILE BUTTON ===== */}
           <button
-            className="md:hidden text-white"
+            className="md:hidden text-white p-2 hover:bg-blue-600 rounded-lg transition"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle menu"
           >
             {mobileOpen ? <X size={28} /> : <Menu size={28} />}
           </button>

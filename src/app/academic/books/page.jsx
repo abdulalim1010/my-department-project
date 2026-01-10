@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { BookOpen, Download, Eye, Filter, Calendar } from "lucide-react";
 
 const YEARS = ["1st", "2nd", "3rd", "4th"];
 const SEMESTERS = ["1st", "2nd"];
 
 export default function BookPage() {
   const [files, setFiles] = useState([]);
-  const [year, setYear] = useState(""); // default empty = show all
-  const [semester, setSemester] = useState(""); // default empty = show all
-  const [loading, setLoading] = useState(false);
+  const [year, setYear] = useState("");
+  const [semester, setSemester] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const fetchBooks = useCallback(async () => {
     setLoading(true);
-
     try {
       let url = "/api/academic?type=book";
       if (year) url += `&year=${year.toLowerCase()}`;
@@ -21,12 +21,9 @@ export default function BookPage() {
 
       const res = await fetch(url, { cache: "no-store" });
       const data = await res.json();
-
-      // Ensure only books are included
       const books = Array.isArray(data)
         ? data.filter((f) => f.type.toLowerCase() === "book")
         : [];
-
       setFiles(books);
     } catch (err) {
       console.error("Fetch books error:", err);
@@ -41,76 +38,135 @@ export default function BookPage() {
   }, [fetchBooks]);
 
   return (
-    <div className="max-w-6xl mx-auto py-12 space-y-8">
-      <h1 className="text-3xl font-bold">Academic Books</h1>
-
-      {/* Filters */}
-      <div className="flex gap-4">
-        <select
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-          className="border p-2 rounded"
-        >
-          <option value="">All Years</option>
-          {YEARS.map((y) => (
-            <option key={y} value={y}>
-              {y} Year
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={semester}
-          onChange={(e) => setSemester(e.target.value)}
-          className="border p-2 rounded"
-        >
-          <option value="">All Semesters</option>
-          {SEMESTERS.map((s) => (
-            <option key={s} value={s}>
-              {s} Semester
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Loading / Empty States */}
-      {loading ? (
-        <p className="text-gray-500">Loading books…</p>
-      ) : files.length === 0 ? (
-        <p className="text-gray-500">No books found.</p>
-      ) : (
-        <div className="grid md:grid-cols-2 gap-6">
-          {files.map((f) => (
-            <div key={f._id} className="bg-white p-4 rounded-xl shadow">
-              <span className="text-xs font-semibold text-blue-600">
-                {f.type.toUpperCase()}
-              </span>
-              <h3 className="font-semibold">{f.title}</h3>
-              <p className="text-sm text-gray-500">
-                {f.subject} • {f.year} Year • {f.semester} Sem
-              </p>
-
-              <div className="flex gap-4 text-sm pt-2">
-                <a
-                  href={f.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline"
-                >
-                  View
-                </a>
-                <a
-                  href={f.downloadUrl}
-                  download
-                  className="text-green-600 underline"
-                >
-                  Download
-                </a>
-              </div>
-            </div>
-          ))}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-12 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-full mb-4">
+            <BookOpen className="text-white" size={32} />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+            Academic Books
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Access textbooks and reference materials for all courses
+          </p>
         </div>
-      )}
+
+        {/* Filters */}
+        <div className="bg-white p-6 rounded-xl shadow-lg mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <Filter className="text-green-600" size={20} />
+            <h2 className="text-lg font-semibold text-gray-800">Filter Books</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <Calendar size={16} className="inline mr-1" />
+                Year
+              </label>
+              <select
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="">All Years</option>
+                {YEARS.map((y) => (
+                  <option key={y} value={y}>
+                    {y} Year
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <BookOpen size={16} className="inline mr-1" />
+                Semester
+              </label>
+              <select
+                value={semester}
+                onChange={(e) => setSemester(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="">All Semesters</option>
+                {SEMESTERS.map((s) => (
+                  <option key={s} value={s}>
+                    {s} Semester
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Books List */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+          </div>
+        ) : files.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+            <BookOpen className="text-gray-400 mx-auto mb-4" size={48} />
+            <p className="text-gray-600 text-lg">No books found</p>
+            <p className="text-gray-500 text-sm mt-2">
+              {year || semester
+                ? "Try adjusting your filters"
+                : "Books will appear here when uploaded"}
+            </p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {files.map((f) => (
+              <div
+                key={f._id}
+                className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-100"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="text-green-600" size={20} />
+                    <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
+                      BOOK
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    {f.year} Year
+                  </span>
+                </div>
+
+                <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
+                  {f.title}
+                </h3>
+                <p className="text-sm text-gray-600 mb-1">
+                  <span className="font-medium">{f.subject}</span>
+                </p>
+                <p className="text-xs text-gray-500 mb-4">
+                  {f.semester} Semester
+                </p>
+
+                <div className="flex items-center gap-2 pt-4 border-t border-gray-200">
+                  <a
+                    href={f.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
+                  >
+                    <Eye size={16} />
+                    View PDF
+                  </a>
+                  <a
+                    href={f.fileUrl}
+                    download={f.fileName || `${f.subject}_book.pdf`}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition text-sm font-medium"
+                  >
+                    <Download size={16} />
+                    Download
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

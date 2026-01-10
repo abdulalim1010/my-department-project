@@ -76,13 +76,25 @@ export default function Banner() {
             electronics, power engineering, and research-driven education.
           </p>
 
-          <div className="flex gap-4">
-            <button className="px-7 py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-semibold shadow-md">
+          <div className="flex flex-wrap gap-4">
+            <a
+              href="/academic"
+              className="px-7 py-3 bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            >
               Explore Academic
-            </button>
-            <button className="px-7 py-3 border border-blue-700 text-blue-700 hover:bg-blue-700 hover:text-white rounded-xl font-semibold">
+            </a>
+            <a
+              href="/notice"
+              className="px-7 py-3 border-2 border-blue-700 text-blue-700 hover:bg-blue-700 hover:text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105"
+            >
               View Notice
-            </button>
+            </a>
+            <a
+              href="/news"
+              className="px-7 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            >
+              Latest News
+            </a>
           </div>
         </motion.div>
 
