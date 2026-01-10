@@ -2,53 +2,46 @@ import clientPromise from "@/lib/mongodb";
 import cloudinary from "@/lib/cloudinary";
 import { ObjectId } from "mongodb";
 
-export async function DELETE(req, context) {
+export async function DELETE(req, { params }) {
   try {
-    // ✅ FIX: params await করতে হবে
-    const { id } = await context.params;
+    // Next.js 16 compatible: params is a Promise
+    const { id } = await params;
 
     if (!id) {
-      return new Response(
-        JSON.stringify({ error: "ID missing" }),
-        { status: 400 }
-      );
+      return Response.json({ error: "ID missing" }, { status: 400 });
     }
 
     const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DB);
+    const db = client.db(process.env.MONGODB_DB || "departmentDB");
 
     const file = await db
       .collection("academic")
       .findOne({ _id: new ObjectId(id) });
 
     if (!file) {
-      return new Response(
-        JSON.stringify({ error: "File not found" }),
-        { status: 404 }
-      );
+      return Response.json({ error: "File not found" }, { status: 404 });
     }
 
-    // ☁️ Cloudinary delete
+    // Delete from Cloudinary if publicId exists
     if (file.publicId) {
-      await cloudinary.uploader.destroy(file.publicId, {
-        resource_type: "raw",
-      });
+      try {
+        await cloudinary.uploader.destroy(file.publicId, {
+          resource_type: "raw",
+        });
+      } catch (cloudinaryError) {
+        console.error("Cloudinary delete error:", cloudinaryError);
+        // Continue with MongoDB deletion even if Cloudinary deletion fails
+      }
     }
 
-    // 🗑️ MongoDB delete
-    await db
-      .collection("academic")
-      .deleteOne({ _id: new ObjectId(id) });
+    // Delete from MongoDB
+    await db.collection("academic").deleteOne({ _id: new ObjectId(id) });
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { status: 200 }
-    );
+    return Response.json({ success: true, message: "File deleted successfully" });
   } catch (error) {
     console.error("DELETE ERROR:", error);
-
-    return new Response(
-      JSON.stringify({ error: error.message }),
+    return Response.json(
+      { error: error.message || "Failed to delete file" },
       { status: 500 }
     );
   }
