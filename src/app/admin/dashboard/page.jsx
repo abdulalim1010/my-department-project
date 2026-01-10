@@ -46,7 +46,16 @@ export default function AdminDashboardPage() {
     );
   }
   
-  if (!isAdmin) return null;
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">Access denied. Admin privileges required.</p>
+          <a href="/" className="text-blue-600 hover:underline">Return to Home</a>
+        </div>
+      </div>
+    );
+  }
 
   const statCards = [
     {
