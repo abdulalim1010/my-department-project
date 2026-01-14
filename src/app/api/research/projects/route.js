@@ -7,32 +7,28 @@ export async function GET() {
     const db = client.db(process.env.MONGODB_DB);
 
     const data = await db
-      .collection("research_publications")
+      .collection("research_projects")
       .find()
       .sort({ createdAt: -1 })
       .toArray();
 
     return Response.json(data);
-  } catch (error) {
-    return Response.json(
-      { error: "Failed to fetch publications" },
-      { status: 500 }
-    );
+  } catch {
+    return Response.json({ error: "Fetch failed" }, { status: 500 });
   }
 }
 
 export async function POST(req) {
   try {
-    const { title, authors, journal, year } = await req.json();
+    const { title, description, status } = await req.json();
 
     const client = await clientPromise;
     const db = client.db(process.env.MONGODB_DB);
 
-    await db.collection("research_publications").insertOne({
+    await db.collection("research_projects").insertOne({
       title,
-      authors,
-      journal,
-      year,
+      description,
+      status, // Ongoing | Completed
       createdAt: new Date(),
     });
 
@@ -49,7 +45,7 @@ export async function DELETE(req) {
     const client = await clientPromise;
     const db = client.db(process.env.MONGODB_DB);
 
-    await db.collection("research_publications").deleteOne({
+    await db.collection("research_projects").deleteOne({
       _id: new ObjectId(id),
     });
 
