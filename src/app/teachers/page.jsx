@@ -17,7 +17,7 @@ export default async function TeachersPage() {
         }}
       >
         {/* OVERLAY */}
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-black/30" />
 
         {/* HEADER CONTENT */}
         <div className="relative z-10 text-center px-6">

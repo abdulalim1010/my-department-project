@@ -2,6 +2,25 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import Link from "next/link";
 
+// Animate-on-load utility (for SSR you might want to hydrate with useEffect in client components)
+function FadeInWrapper({ children, className }) {
+  return (
+    <div
+      className={`opacity-0 translate-y-6 animate-fadeIn ${className || ""}`}
+      style={{
+        animation: 'fadeIn 1.2s cubic-bezier(.5,1,.3,1) forwards',
+      }}
+    >
+      {children}
+      <style>{`
+        @keyframes fadeIn {
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default async function TeacherDetail(props) {
   const { id } = await props.params;
 
@@ -24,43 +43,54 @@ export default async function TeacherDetail(props) {
   return (
     <div className="w-full bg-[#F5F7FB] pb-24">
 
-      {/* BACK */}
-      <div className="max-w-7xl mx-auto px-6 pt-12">
-        <Link href="/teachers" className="text-blue-700 font-semibold">
-          ← Back
-        </Link>
+      {/* HEADER BG IMAGE */}
+      <div className="relative w-full h-[350px] lg:h-[380px] flex items-end">
+        <img
+          src="/department.jpg"
+          alt="Department background"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ zIndex: 0 }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#143066db] via-[#143066a2] to-[#f5f7fb00] opacity-90"></div>
+
+        <FadeInWrapper className="relative max-w-7xl mx-auto px-6 pb-10 z-10 w-full">
+          <Link
+            href="/teachers"
+            className="text-white font-semibold bg-blue-700 bg-opacity-60 hover:bg-opacity-80 transition rounded-md px-4 py-2 inline-block shadow-lg"
+          >
+            ← Back
+          </Link>
+          <h1 className="mt-8 text-5xl font-extrabold text-white drop-shadow-lg">{teacher.name}</h1>
+          <p className="text-2xl text-blue-100 mt-2">{teacher.designation}</p>
+        </FadeInWrapper>
       </div>
 
-      {/* HEADER SECTION */}
+      {/* PROFILE + INFO */}
       <div className="max-w-7xl mx-auto px-6 mt-10">
-
         <div className="flex flex-col lg:flex-row gap-14">
-
-          {/* IMAGE */}
-          <img
-            src={teacher.image}
-            className="w-full lg:w-1/3 h-[450px] object-cover rounded-xl"
-          />
-
-          {/* DETAILS */}
-          <div className="flex-1">
-
-            <h1 className="text-5xl font-extrabold text-blue-900">{teacher.name}</h1>
-            <p className="text-2xl text-gray-600 mt-1">{teacher.designation}</p>
-
-            {/* CONTACT */}
-            <div className="mt-8 space-y-2 text-lg text-gray-700">
-              <p><strong>Department:</strong> {teacher.department}</p>
-              <p><strong>Email:</strong> {teacher.email}</p>
-              <p><strong>Phone:</strong> {teacher.phone}</p>
+          {/* IMAGE CARD W/ ANIMATION */}
+          <FadeInWrapper className="w-full lg:w-1/3">
+            <div className="relative group rounded-xl overflow-hidden shadow-xl transition hover:scale-105 duration-500">
+              <img
+                src={teacher.image}
+                alt={`${teacher.name} photo`}
+                className="w-full h-[450px] object-cover rounded-xl transition duration-700 scale-100 group-hover:scale-110"
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-900 via-blue-700/30 to-transparent rounded-b-xl p-5">
+                <span className="text-white font-bold text-lg">{teacher.department}</span>
+              </div>
             </div>
+          </FadeInWrapper>
 
+          {/* Info */}
+          <FadeInWrapper className="flex-1">
+            <div className="mt-1 text-lg text-gray-600">
+              <p><strong>Email:</strong> <span className="text-blue-700">{teacher.email}</span></p>
+              <p><strong>Phone:</strong> <span className="text-blue-700">{teacher.phone}</span></p>
+            </div>
             {/* BIO */}
-            <p className="mt-8 text-gray-800 text-[18px] leading-8">
-              {teacher.bio}
-            </p>
-
-            {/* SMALL HEIGHT BUTTONS */}
+            <p className="mt-8 text-gray-800 text-[18px] leading-8">{teacher.bio}</p>
+            {/* BUTTONS */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-10">
               {[
                 ["education", "Education"],
@@ -78,14 +108,12 @@ export default async function TeacherDetail(props) {
                     font-medium rounded-lg min-h-[45px]
                     bg-white
                     overflow-hidden
+                    shadow
                     transition-all duration-400
                     hover:-translate-y-1
                   "
                 >
-                  <span className="relative z-10 group-hover:text-white duration-300">
-                    {label}
-                  </span>
-
+                  <span className="relative z-10 group-hover:text-white duration-300">{label}</span>
                   <span
                     className="
                       absolute inset-0 bg-blue-700
@@ -96,47 +124,45 @@ export default async function TeacherDetail(props) {
                 </a>
               ))}
             </div>
-
-          </div>
+          </FadeInWrapper>
         </div>
       </div>
 
       {/* CONTENT SECTIONS */}
       <div className="max-w-7xl mx-auto mt-20 px-6 space-y-16">
+        <FadeInWrapper>
+          {teacher.education && (
+            <Section id="education" title="Education" list={teacher.education} />
+          )}
+          {teacher.experience && (
+            <Section id="experience" title="Experience" list={teacher.experience} />
+          )}
+          {teacher.researchActivities && (
+            <Section id="researchActivities" title="Research Activities" list={teacher.researchActivities} />
+          )}
+          {teacher.publications && (
+            <Section id="publications" title="Publications" list={teacher.publications} />
+          )}
+          {teacher.awards && <Section id="awards" title="Awards" list={teacher.awards} />}
+          {teacher.membership && (
+            <Section id="membership" title="Membership" list={teacher.membership} />
+          )}
 
-        {teacher.education && (
-          <Section id="education" title="Education" list={teacher.education} />
-        )}
-        {teacher.experience && (
-          <Section id="experience" title="Experience" list={teacher.experience} />
-        )}
-        {teacher.researchActivities && (
-          <Section id="researchActivities" title="Research Activities" list={teacher.researchActivities} />
-        )}
-        {teacher.publications && (
-          <Section id="publications" title="Publications" list={teacher.publications} />
-        )}
-        {teacher.awards && <Section id="awards" title="Awards" list={teacher.awards} />}
-        {teacher.membership && (
-          <Section id="membership" title="Membership" list={teacher.membership} />
-        )}
-
-        {/* MAP */}
-        <section id="office">
-          <h2 className="text-3xl font-bold mb-5 text-blue-900">Office Location</h2>
-
-          <iframe
-            src="https://www.google.com/maps/embed?pb=YOUR_MAP_EMBED&zoom=17"
-            className="w-full h-[420px] rounded-xl"
-          ></iframe>
-        </section>
-
+          {/* MAP */}
+          <section id="office">
+            <h2 className="text-3xl font-bold mb-5 text-blue-900">Office Location</h2>
+            <iframe
+              src="https://www.google.com/maps/embed?pb=YOUR_MAP_EMBED&zoom=17"
+              className="w-full h-[420px] rounded-xl"
+            ></iframe>
+          </section>
+        </FadeInWrapper>
       </div>
     </div>
   );
 }
 
-/* SECTION COMPONENT */
+// SECTION COMPONENT
 function Section({ id, title, list }) {
   return (
     <section id={id} className="scroll-mt-32">
