@@ -1,6 +1,7 @@
 import EEEcoursesSection from "./admin/dashboard/components/EEEcoursesSection";
 import Banner from "./components/Banner";
 import UpcomingEvents from "./components/UpcomingEvents";
+import GalleryPage from "./gallery/page";
 import NewsPage from "./news/page";
 
 
@@ -12,6 +13,8 @@ export default function Home() {
       <UpcomingEvents />
       <EEEcoursesSection/>
       <NewsPage/>
+
+      <GalleryPage/>
     </div>
   );
 }
