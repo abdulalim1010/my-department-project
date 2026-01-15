@@ -33,6 +33,13 @@ const menu = [
     icon: BookOpen,
   },
 
+  /* ================= PASSED STUDENTS ================= */
+  {
+    name: "Passed Students",
+    href: "/admin/dashboard/passed-students",
+    icon: Users, // এখানে তুমি অন্য icon চাওলে পরিবর্তন করতে পারো
+  },
+
   /* ================= RESEARCH ================= */
   {
     name: "Research",
@@ -96,7 +103,6 @@ export default function Sidebar() {
 
       {/* ===== NAV ===== */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-
         {menu.map((item) => {
           const Icon = item.icon;
 

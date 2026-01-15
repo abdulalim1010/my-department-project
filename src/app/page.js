@@ -3,6 +3,7 @@ import Banner from "./components/Banner";
 import UpcomingEvents from "./components/UpcomingEvents";
 import GalleryPage from "./gallery/page";
 import NewsPage from "./news/page";
+import PassedStudentsSection from "./passed-students/components/PassedStudentsSection";
 
 
 
@@ -14,7 +15,8 @@ export default function Home() {
       <EEEcoursesSection/>
       <NewsPage/>
 
-      <GalleryPage/>
+      <GalleryPage />
+      <PassedStudentsSection/>
     </div>
   );
 }
