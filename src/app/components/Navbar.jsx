@@ -18,6 +18,7 @@ import {
   LogOut,
   Mail,
   Bell,
+  Info
 } from "lucide-react";
 
 import logoimage from "../../../src/assets/logoo.png";
@@ -146,6 +147,8 @@ export default function Navbar() {
       icon: GraduationCap,
       submenu: [{ label: "Faculty Members", href: "/teachers" }],
     },
+
+      { name: "About", icon: Info, href: "/about" },
     {
       name: "Notice",
       icon: BookOpen,
